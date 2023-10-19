@@ -1,5 +1,9 @@
-import { SplashScreen } from '@capacitor/splash-screen';
 import { Camera } from '@capacitor/camera';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { FilePicker } from '@capawesome/capacitor-file-picker';
+import { AudioFromVideoRetriever } from 'capacitor-audio-from-video';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+
 
 window.customElements.define(
   'capacitor-welcome',
@@ -80,6 +84,7 @@ window.customElements.define(
         </p>
         <p>
           <button class="button" id="take-photo">Take Photo</button>
+          <button class="button" id="select-video">Select video</button>
         </p>
         <p>
           <img id="image" style="max-width: 100%">
@@ -108,6 +113,28 @@ window.customElements.define(
           console.warn('User cancelled', e);
         }
       });
+
+      self.shadowRoot.querySelector('#select-video').addEventListener('click', async function (e) {
+        const pickResult = await FilePicker.pickVideos({
+          multiple: false
+        })
+
+        const outputUri = await Filesystem.getUri({
+          directory: Directory.Cache,
+          path: "audioFile.m4a"
+        })
+
+        if (await Filesystem.stat({path: outputUri.uri })) {
+          await Filesystem.deleteFile({path: outputUri.uri })
+        }
+
+        const extractResult = await AudioFromVideoRetriever.extractAudio({
+          path: pickResult.files[0].path,
+          outputPath: outputUri.uri
+        })
+
+        console.log(extractResult, await Filesystem.stat({path: outputUri.uri}))
+      })
     }
   }
 );

@@ -13,12 +13,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@capacitor/core": "latest",
+    "@capacitor/android": "^5.0.0",
     "@capacitor/camera": "latest",
-    "@capacitor/splash-screen": "latest",
-    "capacitor-audio-from-video": "file:..",
+    "@capacitor/core": "latest",
+    "@capacitor/filesystem": "^5.1.4",
     "@capacitor/ios": "^5.0.0",
-    "@capacitor/android": "^5.0.0"
+    "@capacitor/splash-screen": "latest",
+    "@capawesome/capacitor-file-picker": "^5.1.1",
+    "capacitor-audio-from-video": "file:.."
   },
   "devDependencies": {
     "@capacitor/cli": "latest",
