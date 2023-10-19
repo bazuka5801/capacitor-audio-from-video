@@ -124,9 +124,11 @@ window.customElements.define(
           path: "audioFile.m4a"
         })
 
-        if (await Filesystem.stat({path: outputUri.uri })) {
-          await Filesystem.deleteFile({path: outputUri.uri })
-        }
+        try {
+          if (await Filesystem.stat({path: outputUri.uri })) {
+            await Filesystem.deleteFile({path: outputUri.uri })
+          }
+        } catch {}
 
         const extractResult = await AudioFromVideoRetriever.extractAudio({
           path: pickResult.files[0].path,
