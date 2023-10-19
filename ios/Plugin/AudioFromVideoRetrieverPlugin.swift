@@ -9,10 +9,27 @@ import Capacitor
 public class AudioFromVideoRetrieverPlugin: CAPPlugin {
     private let implementation = AudioFromVideoRetriever()
 
-    @objc func echo(_ call: CAPPluginCall) {
-        let value = call.getString("value") ?? ""
-        call.resolve([
-            "value": implementation.echo(value)
-        ])
+    @objc func extractAudio(_ call: CAPPluginCall) {
+        let path = call.getString("path") ?? ""
+        let outputPath = call.getString("outputPath") ?? ""
+        
+        let url = URL(string: path)
+        let outputUrl = URL(string: outputPath)
+        
+        implementation.extractAudio(videoURL: url!, outputURL: outputUrl!) { resultUrl, error in
+            guard error == nil else {
+                call.reject(error!.localizedDescription)
+                return
+            }
+            
+            guard let resultUrl = resultUrl else {
+                call.reject("Unexpected error occurred during audio extraction.")
+                return
+            }
+            
+            call.resolve([
+                "path": resultUrl.absoluteString
+            ])
+        }
     }
 }

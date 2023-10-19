@@ -1,3 +1,3 @@
 export interface AudioFromVideoRetrieverPlugin {
-  echo(options: { value: string }): Promise<{ value: string }>;
+  extractAudio(options: { path: string, outputPath: string }): Promise<{ path: string }>;
 }
