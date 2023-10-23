@@ -16,10 +16,15 @@ import java.io.File;
 
 @CapacitorPlugin(name = "AudioFromVideoRetriever", permissions = {
     @Permission(
-            alias = "storage",
+            alias = "storage-new",
             strings = {
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    Manifest.permission.READ_MEDIA_VIDEO
+            }
+    ),
+    @Permission(
+            alias = "storage-old",
+            strings = {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
             }
     )
 })
@@ -27,9 +32,17 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
 
     private AudioFromVideoRetriever implementation = new AudioFromVideoRetriever();
 
+    public String getStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return "storage-new";
+        } else {
+            return "storage-old";
+        }
+    }
+
     @PermissionCallback
     private void videoPermsCallback(PluginCall call) {
-        if (getPermissionState("storage") == PermissionState.GRANTED) {
+        if (getPermissionState(getStoragePermission()) == PermissionState.GRANTED) {
             extractAudio(call);
         } else {
             call.reject("Permission is required to take a picture");
@@ -38,8 +51,8 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
 
     @PluginMethod
     public void extractAudio(PluginCall call) {
-        if (getPermissionState("storage") != PermissionState.GRANTED) {
-            requestPermissionForAlias("storage", call, "videoPermsCallback");
+        if (getPermissionState(getStoragePermission()) != PermissionState.GRANTED) {
+            requestPermissionForAlias(getStoragePermission(), call, "videoPermsCallback");
             return;
         }
         String path = call.getString("path");
