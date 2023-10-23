@@ -2,24 +2,29 @@ package com.bazumax.capacitor.audio.from.video;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
-import android.media.MediaCodec;
-import android.media.MediaExtractor;
-import android.media.MediaFormat;
 import android.net.Uri;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
+import java.io.InputStream;
+import android.util.Base64;
+import android.util.Log;
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.FFmpegSession;
+import com.arthenica.ffmpegkit.FFmpegSessionCompleteCallback;
+import com.arthenica.ffmpegkit.LogCallback;
+import com.arthenica.ffmpegkit.ReturnCode;
+import com.arthenica.ffmpegkit.SessionState;
+import com.arthenica.ffmpegkit.Statistics;
+import com.arthenica.ffmpegkit.StatisticsCallback;
 
 public class AudioFromVideoRetriever {
 
 
     public interface ExtractionCallback {
-        void onExtractionCompleted(File audioFile);
+        void onExtractionCompleted(File audioFile, String mimeType) throws IOException;
         void onExtractionFailed(String errorMessage);
     }
 
@@ -38,115 +43,81 @@ public class AudioFromVideoRetriever {
         return null;
     }
 
-    public void extractAudio(File videoFile, File outputAudioFile, ExtractionCallback callback) {
-        MediaExtractor extractor = new MediaExtractor();
 
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(videoFile);
-            FileDescriptor fd = fis.getFD();
-            extractor.setDataSource(fd);
-        } catch (IOException e) {
-            callback.onExtractionFailed("Failed to set data source: " + e.getMessage());
-            return;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            //Release stuff
-            try {
-                if(fis != null) {
-                    fis.close();
-                }
-            } catch (Exception e){
-                e.printStackTrace();
-            }
+
+    public String getDataUrlFromAudioFile(File file, String mimeType) throws IOException {
+        InputStream inputStream = new FileInputStream(file);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
         }
 
-        int audioTrackIndex = findAudioTrack(extractor);
-        if (audioTrackIndex == -1) {
-            callback.onExtractionFailed("No audio track found in the video");
-            return;
-        }
+        byte[] audioData = outputStream.toByteArray();
 
-        extractor.selectTrack(audioTrackIndex);
-        MediaFormat audioFormat = extractor.getTrackFormat(audioTrackIndex);
-        String mimeType = audioFormat.getString(MediaFormat.KEY_MIME);
-
-        MediaCodec codec = null;
-        FileOutputStream outputStream = null;
-
-        try {
-            codec = MediaCodec.createDecoderByType(mimeType);
-            codec.configure(audioFormat, null, null, 0);
-            codec.start();
-
-            MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-            boolean isExtractorEOS = false;
-            boolean isDecoderEOS = false;
-
-            outputStream = new FileOutputStream(outputAudioFile);
-
-            while (!isDecoderEOS) {
-                if (!isExtractorEOS) {
-                    int inputBufferIndex = codec.dequeueInputBuffer(10000);
-                    if (inputBufferIndex >= 0) {
-                        ByteBuffer inputBuffer = codec.getInputBuffer(inputBufferIndex);
-                        int sampleSize = extractor.readSampleData(inputBuffer, 0);
-                        if (sampleSize < 0) {
-                            codec.queueInputBuffer(inputBufferIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-                            isExtractorEOS = true;
-                        } else {
-                            codec.queueInputBuffer(inputBufferIndex, 0, sampleSize, extractor.getSampleTime(), 0);
-                            extractor.advance();
-                        }
-                    }
-                }
-
-                int outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000);
-                if (outputBufferIndex >= 0) {
-                    ByteBuffer outputBuffer = codec.getOutputBuffer(outputBufferIndex);
-                    byte[] chunk = new byte[bufferInfo.size];
-                    outputBuffer.get(chunk);
-                    outputBuffer.clear();
-                    outputStream.write(chunk);
-                    codec.releaseOutputBuffer(outputBufferIndex, false);
-                    if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                        isDecoderEOS = true;
-                    }
-                } else if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    // Ignore format change
-                }
-            }
-
-            callback.onExtractionCompleted(outputAudioFile);
-        } catch (IOException e) {
-            callback.onExtractionFailed("Audio extraction failed: " + e.getMessage());
-        } finally {
-            if (codec != null) {
-                codec.stop();
-                codec.release();
-            }
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            extractor.release();
-        }
+        String base64Data = Base64.encodeToString(audioData, Base64.DEFAULT);
+        return "data:" + mimeType + ";base64," + base64Data;
     }
 
-    private static int findAudioTrack(MediaExtractor extractor) {
-        int numTracks = extractor.getTrackCount();
-        for (int i = 0; i < numTracks; i++) {
-            MediaFormat format = extractor.getTrackFormat(i);
-            String mime = format.getString(MediaFormat.KEY_MIME);
-            if (mime.startsWith("audio/")) {
-                return i;
-            }
+
+
+    private static final String TAG = "VideoToAudio";
+
+    private static String escapePath(String path) {
+        return "\"" + path.replace("\"", "\\\"") + "\"";
+    }
+    public void extractAudio(File videoFile, File outputAudioFile, ExtractionCallback callback) {
+
+        if (outputAudioFile.exists()) {
+            outputAudioFile.delete();
         }
-        return -1;
+
+
+        String videoFilePath = videoFile.getAbsolutePath();
+        String outputAudioFilePath = outputAudioFile.getAbsolutePath();
+
+        // Create an FFmpeg session with the parameters for extraction of audio from video file
+        String[] cmd = {
+                "-i", escapePath(videoFilePath),
+                "-vn", "-ar", "44100", "-ac", "2", "-b:a", "128k",
+                escapePath(outputAudioFilePath)
+        };
+
+        String command = String.join(" ", cmd);
+        FFmpegKit.executeAsync(command, new FFmpegSessionCompleteCallback() {
+
+            @Override
+            public void apply(FFmpegSession session) {
+                SessionState state = session.getState();
+                ReturnCode returnCode = session.getReturnCode();
+
+                // CALLED WHEN SESSION IS EXECUTED
+
+                Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
+
+                try {
+                    callback.onExtractionCompleted(outputAudioFile, "audio/mp4");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }, new LogCallback() {
+
+            @Override
+            public void apply(com.arthenica.ffmpegkit.Log log) {
+
+                // CALLED WHEN SESSION PRINTS LOGS
+
+                Log.d(TAG, log.getMessage());
+            }
+        }, new StatisticsCallback() {
+
+            @Override
+            public void apply(Statistics statistics) {
+                // CALLED WHEN SESSION GENERATES STATISTICS
+            }
+        });
     }
 }

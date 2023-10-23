@@ -1,3 +1,3 @@
 export interface AudioFromVideoRetrieverPlugin {
-  extractAudio(options: { path: string, outputPath: string }): Promise<{ path: string }>;
+  extractAudio(options: { path: string, outputPath: string, includeData?: boolean }): Promise<{ path: string, dataUrl?: string }>;
 }

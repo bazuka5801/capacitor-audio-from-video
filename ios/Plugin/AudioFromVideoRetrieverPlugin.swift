@@ -12,6 +12,7 @@ public class AudioFromVideoRetrieverPlugin: CAPPlugin {
     @objc func extractAudio(_ call: CAPPluginCall) {
         let path = call.getString("path") ?? ""
         let outputPath = call.getString("outputPath") ?? ""
+        let includeData = call.getBool("includeData") ?? false
         
         let url = URL(string: path)
         let outputUrl = URL(string: outputPath)
@@ -27,6 +28,13 @@ public class AudioFromVideoRetrieverPlugin: CAPPlugin {
                 return
             }
             
+            if includeData {
+                call.resolve([
+                    "path": resultUrl.absoluteString,
+                    "dataUrl": self.implementation.getDataURL(from: resultUrl)!,
+                ])
+                return
+            }
             call.resolve([
                 "path": resultUrl.absoluteString
             ])

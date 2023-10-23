@@ -33,4 +33,17 @@ import AVFoundation
             }
         }
     }
+    
+    public func getDataURL(from audioURL: URL) -> String? {
+        do {
+            let audioData = try Data(contentsOf: audioURL)
+            let base64String = audioData.base64EncodedString()
+            let mediaType = "audio/mp4" // Set the appropriate media type for your audio file
+            let dataURLString = "data:\(mediaType);base64,\(base64String)"
+            return dataURLString
+        } catch {
+            print("Error: \(error)")
+            return nil
+        }
+    }
 }

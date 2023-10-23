@@ -23,14 +23,14 @@ npx cap sync
 ### extractAudio(...)
 
 ```typescript
-extractAudio(options: { path: string; outputPath: string; }) => Promise<{ path: string; }>
+extractAudio(options: { path: string; outputPath: string; includeData?: boolean; }) => Promise<{ path: string; dataUrl?: string; }>
 ```
 
-| Param         | Type                                               |
-| ------------- | -------------------------------------------------- |
-| **`options`** | <code>{ path: string; outputPath: string; }</code> |
+| Param         | Type                                                                      |
+| ------------- | ------------------------------------------------------------------------- |
+| **`options`** | <code>{ path: string; outputPath: string; includeData?: boolean; }</code> |
 
-**Returns:** <code>Promise&lt;{ path: string; }&gt;</code>
+**Returns:** <code>Promise&lt;{ path: string; dataUrl?: string; }&gt;</code>
 
 --------------------
 

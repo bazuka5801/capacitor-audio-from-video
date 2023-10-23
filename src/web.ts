@@ -6,7 +6,7 @@ export class AudioFromVideoRetrieverWeb
   extends WebPlugin
   implements AudioFromVideoRetrieverPlugin
 {
-  async extractAudio(options: { path: string, outputPath: string }): Promise<{ path: string }> {
+  async extractAudio(options: { path: string, outputPath: string, includeData?: boolean | undefined }): Promise<{ path: string, dataUrl?: string }> {
     console.log('ECHO', options);
     return options;
   }

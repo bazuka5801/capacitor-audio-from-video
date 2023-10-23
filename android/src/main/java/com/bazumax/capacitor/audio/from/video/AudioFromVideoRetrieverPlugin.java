@@ -2,6 +2,7 @@ package com.bazumax.capacitor.audio.from.video;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.os.Build;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PermissionState;
@@ -13,6 +14,7 @@ import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.File;
+import java.io.IOException;
 
 @CapacitorPlugin(name = "AudioFromVideoRetriever", permissions = {
     @Permission(
@@ -57,6 +59,7 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
         }
         String path = call.getString("path");
         String outputPath = call.getString("outputPath");
+        Boolean includeData = call.getBoolean("includeData", false);
 
         ContentResolver resolver = bridge.getContext().getContentResolver();
         File inputFile = implementation.getFileObject(path, resolver);
@@ -64,8 +67,11 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
 
         implementation.extractAudio(inputFile, outputFile, new AudioFromVideoRetriever.ExtractionCallback() {
             @Override
-            public void onExtractionCompleted(File audioFile) {
+            public void onExtractionCompleted(File audioFile, String mimeType) throws IOException {
                 JSObject ret = new JSObject();
+                if (includeData) {
+                    ret.put("dataUrl", implementation.getDataUrlFromAudioFile(audioFile, mimeType));
+                }
                 ret.put("path", outputPath);
                 call.resolve(ret);
             }
