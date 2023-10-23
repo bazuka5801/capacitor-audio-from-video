@@ -4,6 +4,16 @@ import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { AudioFromVideoRetriever } from 'capacitor-audio-from-video';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
+function playAudioFromDataURL(dataURL) {
+  const audio = new Audio(dataURL);
+  audio.play()
+    .then(() => {
+      console.log('Audio playback started.');
+    })
+    .catch((error) => {
+      console.log('Failed to play audio:', error);
+    });
+}
 
 window.customElements.define(
   'capacitor-welcome',
@@ -132,8 +142,11 @@ window.customElements.define(
 
         const extractResult = await AudioFromVideoRetriever.extractAudio({
           path: pickResult.files[0].path,
-          outputPath: outputUri.uri
+          outputPath: outputUri.uri,
+          includeData: true
         })
+
+        playAudioFromDataURL(extractResult.dataUrl)
 
         console.log(extractResult, await Filesystem.stat({path: outputUri.uri}))
       })
