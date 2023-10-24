@@ -56,4 +56,6 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation 'com.arthenica:ffmpeg-kit-min:6.0-2.LTS'
+//    implementation files("ffmpeg-kit/prebuilt/aar-default/ffmpeg-kit/ffmpeg-kit.aar")
+//    implementation 'com.arthenica:smart-exception-java:0.2.1'
 }
