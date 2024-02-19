@@ -14,6 +14,7 @@ npx cap sync
 <docgen-index>
 
 * [`extractAudio(...)`](#extractaudio)
+* [`compressVideo(...)`](#compressvideo)
 
 </docgen-index>
 
@@ -31,6 +32,21 @@ extractAudio(options: { path: string; outputPath: string; includeData?: boolean;
 | **`options`** | <code>{ path: string; outputPath: string; includeData?: boolean; }</code> |
 
 **Returns:** <code>Promise&lt;{ path: string; dataUrl?: string; }&gt;</code>
+
+--------------------
+
+
+### compressVideo(...)
+
+```typescript
+compressVideo(options: { path: string; outputPath: string; width: number; height: number; bitrate: number; }) => Promise<{ path: string; }>
+```
+
+| Param         | Type                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| **`options`** | <code>{ path: string; outputPath: string; width: number; height: number; bitrate: number; }</code> |
+
+**Returns:** <code>Promise&lt;{ path: string; }&gt;</code>
 
 --------------------
 

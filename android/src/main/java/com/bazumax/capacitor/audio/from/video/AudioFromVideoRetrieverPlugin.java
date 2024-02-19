@@ -82,4 +82,35 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
             }
         });
     }
+
+    @PluginMethod
+    public void compressVideo(PluginCall call) {
+        if (getPermissionState(getStoragePermission()) != PermissionState.GRANTED) {
+            requestPermissionForAlias(getStoragePermission(), call, "videoPermsCallback");
+            return;
+        }
+        String path = call.getString("path");
+        String outputPath = call.getString("outputPath");
+        Integer width = call.getInt("width");
+        Integer height = call.getInt("height");
+        Integer bitrate = call.getInt("bitrate");
+
+        ContentResolver resolver = bridge.getContext().getContentResolver();
+        File inputFile = implementation.getFileObject(path, resolver);
+        File outputFile = implementation.getFileObject(outputPath, resolver);
+
+        implementation.compressVideo(inputFile, outputFile, width, height, bitrate, new AudioFromVideoRetriever.ExtractionCallback() {
+            @Override
+            public void onExtractionCompleted(File audioFile, String mimeType) throws IOException {
+                JSObject ret = new JSObject();
+                ret.put("path", outputPath);
+                call.resolve(ret);
+            }
+
+            @Override
+            public void onExtractionFailed(String errorMessage) {
+                call.reject(errorMessage);
+            }
+        });
+    }
 }
