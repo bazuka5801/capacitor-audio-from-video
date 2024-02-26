@@ -2,6 +2,7 @@ package com.bazumax.capacitor.audio.from.video;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 
 import java.io.ByteArrayOutputStream;
@@ -26,6 +27,7 @@ public class AudioFromVideoRetriever {
     public interface ExtractionCallback {
         void onExtractionCompleted(File file, String mimeType) throws IOException;
         void onExtractionFailed(String errorMessage);
+        void onExtractionProgress(Double progress);
     }
 
     public File getFileObject(String path, ContentResolver resolver) {
@@ -118,13 +120,14 @@ public class AudioFromVideoRetriever {
             @Override
             public void apply(Statistics statistics) {
                 // CALLED WHEN SESSION GENERATES STATISTICS
+                statistics.getTime();
             }
         });
     }
 
 
 
-    public void compressVideo(File videoFile, File outputAudioFile, int width, int height, int bitrate,   ExtractionCallback callback) {
+    public void compressVideo(File videoFile, File outputAudioFile, int width, int height, int bitrate, long durationInMillis,  ExtractionCallback callback) {
 
         if (outputAudioFile.exists()) {
             outputAudioFile.delete();
@@ -173,6 +176,7 @@ public class AudioFromVideoRetriever {
             @Override
             public void apply(Statistics statistics) {
                 // CALLED WHEN SESSION GENERATES STATISTICS
+                callback.onExtractionProgress(statistics.getTime() / durationInMillis );
             }
         });
     }

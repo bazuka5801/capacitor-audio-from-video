@@ -2,6 +2,8 @@ package com.bazumax.capacitor.audio.from.video;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Build;
 
 import com.getcapacitor.JSObject;
@@ -80,6 +82,11 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
             public void onExtractionFailed(String errorMessage) {
                 call.reject(errorMessage);
             }
+
+            @Override
+            public void onExtractionProgress(Double progress) {
+                
+            }
         });
     }
 
@@ -99,7 +106,13 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
         File inputFile = implementation.getFileObject(path, resolver);
         File outputFile = implementation.getFileObject(outputPath, resolver);
 
-        implementation.compressVideo(inputFile, outputFile, width, height, bitrate, new AudioFromVideoRetriever.ExtractionCallback() {
+
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(bridge.getContext(), Uri.fromFile(inputFile));
+        String time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        long timeInMillis = Long.parseLong(time );
+
+        implementation.compressVideo(inputFile, outputFile, width, height, bitrate, timeInMillis, new AudioFromVideoRetriever.ExtractionCallback() {
             @Override
             public void onExtractionCompleted(File audioFile, String mimeType) throws IOException {
                 JSObject ret = new JSObject();
@@ -110,6 +123,13 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
             @Override
             public void onExtractionFailed(String errorMessage) {
                 call.reject(errorMessage);
+            }
+
+            @Override
+            public void onExtractionProgress(Double progress) {
+                JSObject ret = new JSObject();
+                ret.put("progress", progress);
+                notifyListeners("compressProgress", ret);
             }
         });
     }

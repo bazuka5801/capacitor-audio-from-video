@@ -15,6 +15,8 @@ npx cap sync
 
 * [`extractAudio(...)`](#extractaudio)
 * [`compressVideo(...)`](#compressvideo)
+* [`addListener('compressProgress', ...)`](#addlistenercompressprogress)
+* [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -49,5 +51,31 @@ compressVideo(options: { path: string; outputPath: string; width: number; height
 **Returns:** <code>Promise&lt;{ path: string; }&gt;</code>
 
 --------------------
+
+
+### addListener('compressProgress', ...)
+
+```typescript
+addListener(eventName: 'compressProgress', listenerFunc: (event: { progress: number; }) => void) => Promise<PluginListenerHandle> & PluginListenerHandle
+```
+
+| Param              | Type                                                   |
+| ------------------ | ------------------------------------------------------ |
+| **`eventName`**    | <code>'compressProgress'</code>                        |
+| **`listenerFunc`** | <code>(event: { progress: number; }) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt; & <a href="#pluginlistenerhandle">PluginListenerHandle</a></code>
+
+--------------------
+
+
+### Interfaces
+
+
+#### PluginListenerHandle
+
+| Prop         | Type                                      |
+| ------------ | ----------------------------------------- |
+| **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
 
 </docgen-api>
