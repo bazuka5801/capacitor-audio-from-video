@@ -1,6 +1,6 @@
 {
   "name": "capacitor-audio-from-video",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Exctract Audio from Video file",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
