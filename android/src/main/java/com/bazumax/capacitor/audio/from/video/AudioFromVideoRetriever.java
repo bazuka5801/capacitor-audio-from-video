@@ -141,6 +141,7 @@ public class AudioFromVideoRetriever {
         String[] cmd = {
                 "-i", escapePath(videoFilePath),
                 "-b:v", (bitrate/1000) + "k", "-vf", "scale=" + width +":" + height,
+                "-c:v", "libx264",
                 escapePath(outputVideoFilePath)
         };
 
