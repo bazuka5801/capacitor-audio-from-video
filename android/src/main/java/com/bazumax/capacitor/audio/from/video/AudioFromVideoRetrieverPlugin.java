@@ -20,12 +20,6 @@ import java.io.IOException;
 
 @CapacitorPlugin(name = "AudioFromVideoRetriever", permissions = {
     @Permission(
-            alias = "storage-new",
-            strings = {
-                    Manifest.permission.READ_MEDIA_VIDEO
-            }
-    ),
-    @Permission(
             alias = "storage-old",
             strings = {
                     Manifest.permission.READ_EXTERNAL_STORAGE
@@ -38,7 +32,7 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
 
     public String getStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            return "storage-new";
+            return "";
         } else {
             return "storage-old";
         }
@@ -55,7 +49,7 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
 
     @PluginMethod
     public void extractAudio(PluginCall call) {
-        if (getPermissionState(getStoragePermission()) != PermissionState.GRANTED) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && getPermissionState(getStoragePermission()) != PermissionState.GRANTED) {
             requestPermissionForAlias(getStoragePermission(), call, "videoPermsCallback");
             return;
         }
