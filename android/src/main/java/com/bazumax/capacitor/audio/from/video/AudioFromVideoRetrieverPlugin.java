@@ -86,7 +86,7 @@ public class AudioFromVideoRetrieverPlugin extends Plugin {
 
     @PluginMethod
     public void compressVideo(PluginCall call) {
-        if (getPermissionState(getStoragePermission()) != PermissionState.GRANTED) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && getPermissionState(getStoragePermission()) != PermissionState.GRANTED) {
             requestPermissionForAlias(getStoragePermission(), call, "videoPermsCallback");
             return;
         }
